@@ -20,6 +20,7 @@
 
 # RStudio files
 .Rproj.user/
+.Rbuildignore
 
 # produced vignettes
 vignettes/*.html
@@ -39,11 +40,18 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 
-# pkgdown site
-docs/
-
 # translation temp files
 po/*~
 
 # RStudio Connect folder
 rsconnect/
+*data/
+storage/
+
+# Local R library
+local/
+
+# local rds (now handled by dat)
+rds/
+# needs top be handled by dat
+web/rds
