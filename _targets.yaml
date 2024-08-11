@@ -1,0 +1,6 @@
+manuscript:
+  script: make_manuscript.R
+  store: manuscript_store
+whoari:
+  script: make_whoari_comparison.R
+  store: whoari
