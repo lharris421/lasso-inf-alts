@@ -1,4 +1,5 @@
 library(targets)
+library(tarchetypes)
 
 # Run the R scripts in the R/ folder with your custom functions:
 tar_source()
@@ -7,22 +8,7 @@ tar_option_set(
   packages = c("stringr")
 )
 
-# compile_manuscript <- function(plots) {
-#   
-#   print("PLOTS")
-#   print(plots)
-#   plots = str_remove(plots, "\\/manuscript")
-#   # plots = plots[[1]][length(plots[[1]])]
-#   
-#   # system2("make", args = c("-C", "manuscript"),
-#   #         env = c(PLOTS = plots))
-#   
-#   system2("make", args = c("-C", "manuscript"))
-#   
-#   return("./manuscript/lasso-inf-alts.pdf")
-# }
-
-compile_pdf <- function(tex_file, output_dir = "manuscript") {
+compile_pdf <- function(tex_file, output_dir = "manuscript", dependencies) {
   # Construct the full path to the .tex file
   tex_path <- file.path(output_dir, tex_file)
   
@@ -37,23 +23,33 @@ compile_pdf <- function(tex_file, output_dir = "manuscript") {
 }
 
 
-
 # Replace the target list below with your own:
 list(
   tar_target(whoari_comparison, "whoari/objects/comparison_plot", format = "file"),
+  # tar_target(whoari_comparison, "shared/objects/comparison_plot", format = "file"),
   tar_target(
     name = whoari_plot,
     command = save_plot(readRDS(whoari_comparison), "./manuscript/fig/comparison_data.pdf"),
     format = "file"
   ),
-  # tar_target(
-  #   name = manuscript_pdf,
-  #   command = compile_manuscript(whoari_plot),
-  #   format = "file"
-  # ),
+  tar_file_read(
+    main,
+    "./manuscript/main.tex",
+    readLines(!!.x)
+  ),
+  tar_file_read(
+    format,
+    "./manuscript/lasso-inf-alts.tex",
+    readLines(!!.x)
+  ),
+  tar_file_read(
+    bib,
+    "./manuscript/lasso-inf-alts.bib",
+    readLines(!!.x)
+  ),
   tar_target(
     name = manuscript_pdf,
-    command = compile_pdf("lasso-inf-alts.tex"),
+    command = compile_pdf("lasso-inf-alts.tex", dependencies = c(whoari_plot, main, format, bib)),
     format = "file"
   )
 )

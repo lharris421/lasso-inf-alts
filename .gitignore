@@ -55,11 +55,3 @@ local/
 rds/
 # needs top be handled by dat
 web/rds
-
-##
-shared/
-manuscript_store/
-whoari/
-shared/*
-manuscript_store/*
-whoari/*
