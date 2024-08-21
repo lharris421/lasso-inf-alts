@@ -9,7 +9,11 @@ library(ggplot2)
 library(magrittr)
 library(dplyr)
 library(hdi)
+library(hdrm)
 
-
-my_seed <- 189807771
-set.seed(my_seed)
+methods <- list(
+  "lasso" = list(method = "posterior", method_arguments = list(penalty = "lasso")),
+  "mcp"   = list(method = "posterior", method_arguments = list(penalty = "MCP")),
+  "pipe"  = list(method = "pipe_ncvreg", method_arguments = list()),
+  "lp"    = list(method = "lp", method_arguments = list())
+)
