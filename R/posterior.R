@@ -106,7 +106,8 @@ posterior <- function(X, y, cv_fit, lambda, sigma2, alpha = 0.2, penalty = "lass
     variable = colnames(X),
     estimate = bh_lambda / rescale,
     lower = ci$lower / rescale,
-    upper = ci$upper / rescale
+    upper = ci$upper / rescale,
+    lambda = lambda
   )
   
 }

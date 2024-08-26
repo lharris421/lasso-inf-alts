@@ -15,7 +15,8 @@ lp <- function(X, y, alpha = 0.2, lambda = NULL) {
     ci <- ci_hdi %>%
       data.frame(variable = rownames(ci_hdi)) %>%
       mutate(estimate = fit.lasso.allinfo$bhat) %>%
-      select(variable, estimate, lower, upper)
+      select(variable, estimate, lower, upper) %>%
+      mutate(lambda = lambda)
     
     res <- ci
     return(res)

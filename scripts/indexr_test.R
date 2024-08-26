@@ -9,15 +9,15 @@ library(hdi)
 
 
 ## Simple
-# simulation_results <- sim(
-#   posterior, method_arguments = list(penalty = "lasso"),
-#   simulation_function = gen_data,
-#   simulation_arguments = list(
-#     n = 100, p = 60, p1 = 10, SNR = 1, signal = "homogeneous",
-#     corr="exchangeable", rho = 0
-#   )
-# )
-# indexr::save_objects("./rds", simulation_results)
+simulation_results <- sim(
+  posterior, method_arguments = list(penalty = "lasso"),
+  simulation_function = gen_data,
+  simulation_arguments = list(
+    n = 100, p = 60, p1 = 10, SNR = 1, signal = "homogeneous",
+    corr="exchangeable", rho = 0
+  )
+)
+indexr::save_objects("./rds", simulation_results)
 
 # Read back in
 # simulation_arguments <- list(

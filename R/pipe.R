@@ -143,7 +143,8 @@ pipe_ncvreg <- function(X, y, cv_fit, lambda, alpha = 0.05, penalty = "lasso") {
     lower = (b_bar - widths) / rescale,
     upper = (b_bar + widths) / rescale,
     significance = qs,
-    original_pvals = ps
+    original_pvals = ps,
+    lambda = lambda
   )
   
 }

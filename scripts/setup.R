@@ -10,6 +10,7 @@ library(magrittr)
 library(dplyr)
 library(hdi)
 library(hdrm)
+library(parallel)
 
 methods <- list(
   "lasso" = list(method = "posterior", method_arguments = list(penalty = "lasso")),
