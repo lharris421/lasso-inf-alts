@@ -106,7 +106,7 @@ sim_parallel <- function(methods, simulation_function, simulation_arguments,
 sim_iteration <- function(iteration, methods, alpha = 0.05,
                           simulation_function, simulation_arguments = list(),
                           iterations = 1000,
-                          seed) {
+                          seed = 1234) {
   
   method_names <- names(methods)
   

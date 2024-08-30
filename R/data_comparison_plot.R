@@ -1,4 +1,4 @@
-compare_methods <- function(res_list) {
+compare_methods <- function(res_list, truth = NULL) {
   
   # Combine all results into one data frame, using the list names as method names
   combined_res <- purrr::imap_dfr(res_list, ~ .x %>%
@@ -11,6 +11,11 @@ compare_methods <- function(res_list) {
     geom_point(aes(x = estimate, y = variable, color = method), alpha = 0.8) +
     theme_bw() +
     labs(y = "Variable", x = "Estimate")
+  
+  if (!is.null(truth)) {
+    plot <- plot +
+      geom_point(data = truth, aes(y = var, x = truth), color = "red", shape = 1)
+  }
   
   return(plot)
   

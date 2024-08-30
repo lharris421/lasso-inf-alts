@@ -69,9 +69,7 @@ gen_y <- function(eta, family=c("gaussian", "binomial"), sigma=1) {
   family=match.arg(family)
   n <- length(eta)
   if (family=="gaussian") {
-    y <- rnorm(n, mean=eta, sd=sigma)
-    errs <- y - eta
-    return(list(y, errs))
+    rnorm(n, mean=eta, sd=sigma)
   } else if (family=="binomial") {
     pi. <- exp(eta)/(1+exp(eta))
     pi.[eta > log(.9999/.0001)] <- 1

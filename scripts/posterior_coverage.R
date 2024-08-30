@@ -1,3 +1,6 @@
+## A script for testing the coverage rate for the posterior method (lasso / MCP penalties)
+## Not really intended to save and veiw results, more just a general gut check
+
 source("./scripts/setup.R")
 
 p <- 100

@@ -1,4 +1,4 @@
-posterior <- function(X, y, cv_fit, lambda, sigma2, alpha = 0.2, penalty = "lasso") {
+posterior <- function(X, y, cv_fit, lambda, sigma2, alpha = 0.05, penalty = "lasso") {
   
   if (!missing(cv_fit) && class(cv_fit) != "cv.ncvreg") {
     stop("cv_fit must be an opbject of class cv.ncvreg.")
@@ -99,7 +99,6 @@ posterior <- function(X, y, cv_fit, lambda, sigma2, alpha = 0.2, penalty = "lass
     sigma2 <- (n - sh_lh)^(-1) * sum((y - yhat)^2)
   }
   
-  # ci <- ci_full_cond(b_bar, lambda = lambda, sigma2 = sigma2, n = n, alpha = alpha)
   ci <- ci_full_cond(b_bar, lambda = lambda, sigma2 = sigma2, n = ns, alpha = alpha, penalty = penalty)
   
   data.frame(

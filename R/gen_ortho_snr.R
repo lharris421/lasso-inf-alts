@@ -5,7 +5,7 @@ gen_ortho_snr <- function(n, p, p1=floor(p/2), beta, family=c("gaussian","binomi
   if (p > n) stop("Cannot generate orthonormal design matrix if p is larger than n")
   
   # Gen X
-  X <- qr.Q(qr(matrix(rnorm(n*p), n, p)))
+  X <- sqrt(n)*qr.Q(qr(matrix(rnorm(n*p), n, p)))
   
   # Gen beta
   if (missing(beta) || length(beta)==1) {
@@ -23,8 +23,6 @@ gen_ortho_snr <- function(n, p, p1=floor(p/2), beta, family=c("gaussian","binomi
   
   # Gen y
   y <- gen_y(X%*%beta, family=family, sigma=1)
-  errs <- y[[2]]
-  y <- y[[1]]
   
   # Label and return
   w <- 1 + floor(log10(p))

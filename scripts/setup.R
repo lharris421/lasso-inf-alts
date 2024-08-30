@@ -16,5 +16,5 @@ methods <- list(
   "lasso" = list(method = "posterior", method_arguments = list(penalty = "lasso")),
   "mcp"   = list(method = "posterior", method_arguments = list(penalty = "MCP")),
   "pipe"  = list(method = "pipe_ncvreg", method_arguments = list()),
-  "lp"    = list(method = "lp", method_arguments = list())
+  "lp"    = list(method = "lp", method_arguments = list(original = TRUE))
 )
