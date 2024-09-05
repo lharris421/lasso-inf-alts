@@ -52,6 +52,6 @@ storage/
 local/
 
 # local rds (now handled by dat)
-rds/
-# needs top be handled by dat
-web/rds
+*.rds
+/rds/.dat/local
+
