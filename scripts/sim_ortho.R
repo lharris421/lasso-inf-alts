@@ -15,5 +15,6 @@ simulation_info <- list(
   )
 )
 
-run_sim(methods, simulation_info, parallel = TRUE, nClust = 4, libsEx = libs,
+## Specify number of iterations in run sim
+run_sim(methods, simulation_info, parallel = TRUE, nClust = 5, libsEx = libs,
         clusterEv = evalFunc, clusterEx = exports, overwrite = TRUE)

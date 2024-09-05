@@ -1,6 +1,10 @@
 source("./scripts/setup.R")
 
-params <- list(seed = 1234, iterations = 1000, alpha = 0.05,
+## A script version set up of the simulation
+## this differs mildly in behavior, allowing a more granular handling in lambda
+
+
+params <- list(seed = 1234, iterations = 1000,
                simulation_function = "gen_ortho", simulation_arguments = list(
                  n = 100, p = 100,
                  beta = c(-2, 2, -1, 1, -0.5, 0.5, -0.5, 0.5, rep(0, 92))
@@ -27,7 +31,7 @@ for(i in 1:params$iterations) {
     lambda <- ifelse(names(methods)[j] == "mcp", mcp_lambda, lasso_lambda)
     
     time_taken <- system.time({
-      results <- do.call(methods[[j]]$method, c(list(X = data$X, y = data$y, lambda = lambda, alpha = params$alpha), methods[[j]]$method_arguments)) 
+      results <- do.call(methods[[j]]$method, c(list(X = data$X, y = data$y, lambda = lambda), methods[[j]]$method_arguments)) 
     })
     
     res[[i]][[names(methods)[j]]] <- results %>%

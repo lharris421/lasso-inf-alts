@@ -40,7 +40,6 @@ run_sim <- function(methods, simulation_info, iterations = 1000, overwrite = TRU
     method_info <- methods[[method_names[i]]]
     results$call[names(method_info)] <- method_info
     results$call[1] <- "sim" ## Need more elegant solution
-    print(results$call)
     
     indexr::save_objects("./rds", results, overwrite = overwrite) 
     
@@ -103,9 +102,8 @@ sim_parallel <- function(methods, simulation_function, simulation_arguments,
   return(list(call = original_call, results = res))
   
 }
-sim_iteration <- function(iteration, methods, alpha = 0.05,
-                          simulation_function, simulation_arguments = list(),
-                          iterations = 1000,
+sim_iteration <- function(iteration, methods, simulation_function,
+                          simulation_arguments = list(), iterations = 1000,
                           seed = 1234) {
   
   method_names <- names(methods)
@@ -121,7 +119,7 @@ sim_iteration <- function(iteration, methods, alpha = 0.05,
   for (j in 1:length(methods)) {
     
     time_taken <- system.time({
-      results <- do.call(methods[[method_names[j]]]$method, c(list(X = data$X, y = data$y, alpha = alpha), methods[[method_names[j]]]$method_arguments)) 
+      results <- do.call(methods[[method_names[j]]]$method, c(list(X = data$X, y = data$y), methods[[method_names[j]]]$method_arguments)) 
     })
     ret[[method_names[j]]] <- results %>%
       mutate(truth = data$beta, iteration = iteration, method = method_names[j], time = time_taken["elapsed"]) 

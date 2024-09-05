@@ -20,9 +20,9 @@ ci_coverage_plot <- function(plot_list, vars) {
     geom_text(
       data = coverage_labels,
       aes(x = -Inf, y = Inf, label = label),
-      hjust = 0, vjust = 1.75,
+      hjust = 0, vjust = 1,
       inherit.aes = FALSE,
-      size = 3
+      size = 2
     ) +
     facet_grid(method ~ variable)
   

@@ -13,8 +13,14 @@ library(hdrm)
 library(parallel)
 
 methods <- list(
+  "hybrid" = list(method = "boot_ncv", method_arguments = list(penalty = "lasso", submethod = "hybrid")),
+  "debiased" = list(method = "boot_ncv", method_arguments = list(penalty = "lasso", submethod = "debiased")),
+  "posterior" = list(method = "boot_ncv", method_arguments = list(penalty = "lasso", submethod = "posterior")),
   "lasso" = list(method = "posterior", method_arguments = list(penalty = "lasso")),
-  "mcp"   = list(method = "posterior", method_arguments = list(penalty = "MCP")),
   "pipe"  = list(method = "pipe_ncvreg", method_arguments = list()),
-  "lp"    = list(method = "lp", method_arguments = list(original = TRUE))
+  "mcp"   = list(method = "posterior", method_arguments = list(penalty = "MCP"))
+  # "lp"    = list(method = "lp", method_arguments = list(original = TRUE))
 )
+for (i in 1:length(methods)) {
+  methods[[i]]$method_arguments["alpha"] <- 0.05
+}

@@ -1,5 +1,6 @@
 source("./scripts/setup.R")
 
+## Need to reveiw and leave comments on findings
 params <- list(n = 100, p = 60, SNR = 1, seed = 1234, method = "posterior", 
                method_arguments = list(penalty = "lasso"), iterations = 1000)
 

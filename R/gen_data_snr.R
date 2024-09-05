@@ -30,15 +30,13 @@ gen_data_snr <- function(n, p, p1=floor(p/2), beta, family=c("gaussian","binomia
   sigma <- 1
   # Gen y
   y <- gen_y(X%*%beta, family=family, sigma=sigma)
-  errs <- y[[2]]
-  y <- y[[1]]
   
   # Label and return
   w <- 1 + floor(log10(p))
   vlab <- paste0('V', formatC(1:p, format='d', width=w, flag='0'))
   colnames(X) <- names(beta) <- vlab
   
-  list(X=X, y=y, beta=beta, family=family, errs = errs)
+  list(X=X, y=y, beta=beta, family=family)
 }
 
 gen_x <- function(n, p, rho, corr=c('exchangeable', 'autoregressive')) {
