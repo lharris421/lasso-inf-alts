@@ -16,8 +16,20 @@ methods <- methods["pipe"]
 simulation_info <- list(
   simulation_function = "gen_data_abn",
   simulation_arguments = list(
-    n = 50, p = 100, a = 8, b = 2, rho = 0.5,
-    beta = c(-2, 2, -1, 1, -0.5, 0.5, -0.5, 0.5, rep(0, 92))
+    n = 100, p = 100, a = 10, b = 4, rho = 0.5,
+    beta = c(1 / (2^(0:9)) * c(1,-1),
+             rep(0, 90))
+    # rho.noise = 0.5, noise = "autoregressive"
+  )
+)
+
+simulation_info <- list(
+  simulation_function = "gen_data_abn",
+  simulation_arguments = list(
+    n = 100, p = 100, a = 10, b = 4, rho = 0.5,
+    beta = c(rep(0.1, 10) * c(1,-1),
+             rep(0, 90))
+    # rho.noise = 0.5, noise = "autoregressive"
   )
 )
 

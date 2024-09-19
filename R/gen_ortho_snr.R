@@ -17,8 +17,10 @@ gen_ortho_snr <- function(n, p, p1=floor(p/2), beta, family=c("gaussian","binomi
       b <- b*s
       beta <- b*sqrt(SNR)/sqrt(drop(crossprod(b)))
     } else {
-      beta <- (beta / sqrt(drop(crossprod(beta)))) * sqrt(SNR)
+      beta <- b*s*beta
     }
+  } else {
+    beta <- beta*sqrt(SNR)/sqrt(drop(crossprod(beta)))
   }
   
   # Gen y

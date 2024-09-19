@@ -41,7 +41,7 @@ run_sim <- function(methods, simulation_info, iterations = 1000, overwrite = TRU
     results$call[names(method_info)] <- method_info
     results$call[1] <- "sim" ## Need more elegant solution
     
-    indexr::save_objects("./rds", results, overwrite = overwrite) 
+    indexr::save_objects("./rds", results, overwrite = overwrite, get_script_name = FALSE) 
     
   }
   

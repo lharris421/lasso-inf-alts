@@ -1,4 +1,4 @@
-posterior <- function(X, y, cv_fit, lambda, sigma2, alpha = 0.05, penalty = "lasso") {
+posterior <- function(X, y, cv_fit, lambda, sigma2, alpha = 0.05, penalty = "lasso", correction, adjust_ss = TRUE) {
   
   if (!missing(cv_fit) && class(cv_fit) != "cv.ncvreg") {
     stop("cv_fit must be an opbject of class cv.ncvreg.")
@@ -69,10 +69,10 @@ posterior <- function(X, y, cv_fit, lambda, sigma2, alpha = 0.05, penalty = "las
   } else {
     q_sh_default <- diag(n)
   }
-  
+
   ns <- numeric(p)
   for (j in 1:p) {
-    
+
     if (!s[j]) {
       s_j <- s
       sh_j <- sh_lh
@@ -81,24 +81,26 @@ posterior <- function(X, y, cv_fit, lambda, sigma2, alpha = 0.05, penalty = "las
       s_j <- s
       s_j[j] <- FALSE
       sh_j <- sum(s_j)
-      
+
       if (sh_j > 0) {
         Xsj <- X[,s_j,drop=FALSE]
         q_sh <- diag(n) - Xsj %*% solve(t(Xsj) %*% Xsj, tol = 1e-12) %*% t(Xsj)
       } else {
         q_sh <- diag(n)
       }
-      
+
     }
-    
+
     ns[j] <- t(X[,j,drop=FALSE]) %*% q_sh %*% X[,j,drop=FALSE]
-    
+
   }
   
   if (missing(sigma2)) {
     sigma2 <- (n - sh_lh)^(-1) * sum((y - yhat)^2)
   }
   
+  if (!adjust_ss) ns <- n
+  if (!missing(correction) && correction == "holm") alpha <- alpha / (ncol(X) - order(abs(b_bar), decreasing = TRUE) + 1)
   ci <- ci_full_cond(b_bar, lambda = lambda, sigma2 = sigma2, n = ns, alpha = alpha, penalty = penalty)
   
   data.frame(
@@ -160,9 +162,17 @@ soft_threshold <- function(z_j, lambda) {
   } 
   
 }
+## THIS IS TAKING A DRAW FROM THE POSTERIOR which is why we add back lambda
+## z_j is not the best terminology here. Really z_j is beta j for this function
+## should update to logically match
+## probably should also update in case this was ever exactly 0???
 firm_threshold_c <- function(z_j, lambda, gamma) {
   
-  z_j <- z_j + sign(z_j)*lambda
+  if (z_j != 0) {
+    z_j <- z_j + sign(z_j)*lambda 
+  } else {
+    stop("Logan you need to address this.")
+  }
   
   if (abs(z_j) <= gamma*lambda) {
     return((gamma / (gamma - 1))*soft_threshold(z_j, lambda))

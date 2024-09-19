@@ -31,7 +31,7 @@
 #' }
 #'
 #' @export
-pipe_ncvreg <- function(X, y, cv_fit, lambda, alpha = 0.05, penalty = "lasso") {
+pipe_ncvreg <- function(X, y, cv_fit, lambda, alpha = 0.05, penalty = "lasso", studentize = FALSE, correction) {
   
   if (!missing(cv_fit) && class(cv_fit) != "cv.ncvreg") {
     stop("cv_fit must be an opbject of class cv.ncvreg.")
@@ -96,6 +96,7 @@ pipe_ncvreg <- function(X, y, cv_fit, lambda, alpha = 0.05, penalty = "lasso") {
   s <- bh_lambda != 0
   sh_lh <- sum(s)
   sigma_h <- sqrt((n - sh_lh)^(-1) * sum((y - yhat)^2))
+  # sigma_h <- sqrt(cv_fit$cve[cv_fit$min])
   
   partial_residuals <- (y - yhat) + (X * matrix(bh_lambda, nrow = n, ncol = p, byrow=TRUE))
   b_bar <- (1/n)*colSums(X * partial_residuals)
@@ -135,7 +136,12 @@ pipe_ncvreg <- function(X, y, cv_fit, lambda, alpha = 0.05, penalty = "lasso") {
   ts <- b_bar / ses
   ps <- 2 * (1 - pnorm(abs(ts)))
   qs <- p.adjust(ps, method = "BH")
-  widths <- abs(qnorm(alpha / 2)) * ses
+  if (!missing(correction) && correction == "holm") alpha <- alpha / (ncol(X) - order(ps) + 1)
+  if (!studentize) {
+    widths <- abs(qnorm(alpha / 2)) * ses
+  } else { 
+    widths <- abs(qt(alpha / 2, df = n - sh_lh)) * ses
+  }
   
   data.frame(
     variable = colnames(X),
@@ -144,7 +150,9 @@ pipe_ncvreg <- function(X, y, cv_fit, lambda, alpha = 0.05, penalty = "lasso") {
     upper = (b_bar + widths) / rescale,
     significance = qs,
     original_pvals = ps,
-    lambda = lambda
+    lambda = lambda,
+    betahat = bh_lambda / rescale,
+    rescale_factor = rescale
   )
   
 }

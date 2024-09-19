@@ -12,7 +12,10 @@ lp <- function(X, y, alpha = 0.05, lambda = NULL, original = FALSE) {
   
   tryCatch({
     fit.lasso.allinfo <- lasso.proj(
-      X, y, lambda = lambda
+      X, y, lambda = lambda,
+      suppress.grouptesting = TRUE
+      #do.ZnZ = TRUE, multiplecorr.method = "bonferroni",
+      #betainit = "scaled lasso"
     )
     ci_hdi <- confint(fit.lasso.allinfo, level = 1 - alpha)
     

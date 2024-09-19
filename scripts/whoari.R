@@ -1,18 +1,13 @@
 source("./scripts/setup.R")
 
-params <- list(script = "whoari", alpha = 0.05)
-
 dat <- hdrm::readData("whoari")
 
 cv_fit <- cv.ncvreg(dat$X, dat$y, penalty = "lasso")
 cv_fit_mcp <- cv.ncvreg(dat$X, dat$y, penalty = "MCP")
 
-pipe_res <- pipe_ncvreg(dat$X, dat$y, alpha = 0.05, lambda = cv_fit$lambda.min)
-blp_res <- blp(dat$X, dat$y, alpha = 0.05, boot.shortcut = TRUE, lambda = cv_fit$lambda.min)
-posterior_res <- posterior(dat$X, dat$y, alpha = 0.05, lambda = cv_fit$lambda.min)
-mcp_posterior_res <- posterior(dat$X, dat$y, penalty = "MCP", alpha = 0.05, lambda = cv_fit_mcp$lambda.min)
+for (i in 1:length(methods)) {
+  curr_lambda <- ifelse(methods[[i]]$method == "mcp", cv_fit_mcp$lambda.min, cv_fit$lambda.min)
+  res <- do.call(methods[[i]]$method, c(list(X = dat$X, y = dat$y, lambda = curr_lambda), methods[[i]]$method_arguments))
+  indexr::save_objects("./rds", res, args_list = methods[[i]], overwrite = TRUE)
+}
 
-indexr::save_objects("./rds", pipe_res, args_list = c(params, method = "pipe_ncvreg"))
-indexr::save_objects("./rds", blp_res, args_list = c(params, method = "lp"))
-indexr::save_objects("./rds", posterior_res, args_list = c(params, method = "posterior", method_arguments = list(penalty = "lasso")))
-indexr::save_objects("./rds", mcp_posterior_res, args_list = c(params, method = "posterior", method_arguments = list(penalty = "MCP")))

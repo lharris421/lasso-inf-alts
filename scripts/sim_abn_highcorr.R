@@ -13,7 +13,7 @@ simulation_info <- list(
   simulation_function = "gen_data_abn",
   simulation_arguments = list(
     n = 100, p = 100, a = 1, b = 1, rho = 0.99,
-    beta = c(1, rep(0, 99))
+    beta = 1
   )
 )
 
