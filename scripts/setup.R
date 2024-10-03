@@ -14,13 +14,15 @@ library(parallel)
 
 methods <- list(
 #  "hybrid" = list(method = "boot_ncv", method_arguments = list(penalty = "lasso", submethod = "hybrid")),
-#  "debiased" = list(method = "boot_ncv", method_arguments = list(penalty = "lasso", submethod = "debiased")),
+"debiased" = list(method = "boot_ncv", method_arguments = list(penalty = "lasso", submethod = "debiased"))
 #  "posterior" = list(method = "boot_ncv", method_arguments = list(penalty = "lasso", submethod = "posterior")),
 #"lasso" = list(method = "posterior", method_arguments = list(penalty = "lasso")),
-# "pipe"  = list(method = "pipe_ncvreg", method_arguments = list())
+#"normal_approx"  = list(method = "pipe_ncvreg", method_arguments = list(original_n = TRUE))
+#"pipe"  = list(method = "pipe_ncvreg", method_arguments = list()),
 #  "pipe_mcp"  = list(method = "pipe_ncvreg", method_arguments = list(penalty = "MCP")),
-  "mcp"   = list(method = "posterior", method_arguments = list(penalty = "MCP", adjust_ss = FALSE))
+#  "mcp"   = list(method = "posterior", method_arguments = list(penalty = "MCP", studentize = FALSE, adjust_ss = FALSE))
 #  "lp"    = list(method = "lp", method_arguments = list(original = TRUE))
+#  "pipe"  = list(method = "pipe_ncvreg", method_arguments = list(correct_bias = TRUE))
 )
 for (i in 1:length(methods)) {
   methods[[i]]$method_arguments["alpha"] <- 0.05

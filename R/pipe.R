@@ -31,7 +31,13 @@
 #' }
 #'
 #' @export
-pipe_ncvreg <- function(X, y, cv_fit, lambda, alpha = 0.05, penalty = "lasso", studentize = FALSE, correction) {
+pipe_ncvreg <- function(
+    X, y, cv_fit, lambda, sigma = NULL, alpha = 0.05, penalty = "lasso", studentize = FALSE,
+    correction, correct_bias = FALSE, original_n = FALSE
+    # true_beta = NULL
+) {
+  
+  
   
   if (!missing(cv_fit) && class(cv_fit) != "cv.ncvreg") {
     stop("cv_fit must be an opbject of class cv.ncvreg.")
@@ -83,56 +89,95 @@ pipe_ncvreg <- function(X, y, cv_fit, lambda, alpha = 0.05, penalty = "lasso", s
     lambda <- cv_fit$lambda.min
   }
   
-  n <- length(y)
+  n <- nrow(X)
+  p <- ncol(X)
+  #orig_x <- t(t(X)*attr(X, "scale") + attr(X, "center"))
+  #errs <- (y - (orig_x%*%true_beta))
   
   bh_lambda <- coef(cv_fit$fit, lambda = lambda)
   rescale <- attr(X, "scale")
   bh_lambda <- bh_lambda[-1] * rescale
+  signs_s <- sign(bh_lambda)
   intercept <- mean(y - as.numeric(X %*% bh_lambda))
-  p <- length(bh_lambda)
   yhat <- intercept + as.numeric(X %*% bh_lambda)
+  #print(cv_fit$fit$linear.predictors[,cv_fit$min])
+  #print(yhat)
   
   
   s <- bh_lambda != 0
   sh_lh <- sum(s)
-  sigma_h <- sqrt((n - sh_lh)^(-1) * sum((y - yhat)^2))
+  if (is.null(sigma)) {
+    sigma_h <- sqrt((n - sh_lh)^(-1) * sum((y - yhat)^2))
+  } else {
+    sigma_h <- sigma
+  }
   # sigma_h <- sqrt(cv_fit$cve[cv_fit$min])
   
   partial_residuals <- (y - yhat) + (X * matrix(bh_lambda, nrow = n, ncol = p, byrow=TRUE))
+
   b_bar <- (1/n)*colSums(X * partial_residuals)
   
   if (sh_lh > 0) {
     Xs <- X[,s,drop =FALSE]
-    q_sh_default <- diag(n) - Xs %*% solve(t(Xs) %*% Xs, tol = 1e-12) %*% t(Xs)
+    p_sh_default <- Xs %*% solve(t(Xs) %*% Xs, tol = 1e-12) %*% t(Xs)
+    q_sh_default <- diag(n) - p_sh_default
   } else {
     q_sh_default <- diag(n)
   }
   
   ses <- numeric(p)
-  for (j in 1:p) {
+  # bias_correction <- numeric(p)
+  if (!original_n) {
     
-    if (!s[j]) {
-      s_j <- s
-      sh_j <- sh_lh
-      q_sh <- q_sh_default
-    } else {
-      s_j <- s
-      s_j[j] <- FALSE
-      sh_j <- sum(s_j)
+    for (j in 1:p) {
       
-      if (sh_j > 0) {
+      Xj <- X[,j,drop=FALSE]
+      
+      if (!s[j]) {
+        
+        s_j <- s
+        sh_j <- sh_lh
+        q_sh <- q_sh_default
         Xsj <- X[,s_j,drop=FALSE]
-        q_sh <- diag(n) - Xsj %*% solve(t(Xsj) %*% Xsj, tol = 1e-12) %*% t(Xsj)
+        
       } else {
-        q_sh <- diag(n)
+        s_j <- s
+        s_j[j] <- FALSE
+        sh_j <- sum(s_j)
+        
+        if (sh_j > 0) {
+          
+          Xsj <- X[,s_j,drop=FALSE]
+          Xsj2i <- solve(t(Xsj) %*% Xsj, tol = 1e-12)
+          q_sh <- diag(n) - (Xsj %*% Xsj2i %*% t(Xsj))
+  
+        } else {
+  
+          Xsj <- X[,s_j,drop=FALSE]
+          q_sh <- diag(n)
+  
+        }
+          
       }
+      
+      # all_beta <- true_beta * rescale
+      # bias_err <- (1/n) * t(X[,j]) %*% errs
+      # bias_err2 <- (t(X[,j,drop=FALSE]) %*% q_sh %*% X[,j,drop=FALSE])^(-1) * (t(X[,j,drop=FALSE]) %*% q_sh %*% errs)
+      # delta <- (1/n)*t(Xsj)%*%(y - X[,j,drop=FALSE]*b_bar[j] - Xsj %*% bh_lambda[s_j])
+      # bias1[j] <- bias_err2 + (t(X[,j,drop=FALSE]) %*% q_sh %*% X[,j,drop=FALSE])^(-1) * (t(X[,j,drop=FALSE]) %*% q_sh %*% X[,-j,drop=FALSE] %*% all_beta[-j]) + (t(X[,j,drop=FALSE]) %*% q_sh %*% X[,j,drop=FALSE])^(-1) * (n*t(X[,j,drop=FALSE]) %*% Xsj %*% solve(t(Xsj) %*% Xsj, tol = 1e-12) %*% delta)
+      # bias_correction[j] <- (t(X[,j,drop=FALSE]) %*% q_sh %*% X[,j,drop=FALSE])^(-1) * (n*t(X[,j,drop=FALSE]) %*% Xsj %*% solve(t(Xsj) %*% Xsj, tol = 1e-12) %*% delta)
+      # bias2[j] <- bias_err + (1/n)*t(X[,j,drop=FALSE]) %*% X[,-j,drop=FALSE] %*% (all_beta[-j] - bh_lambda[-j])
+      
+      ses[j] <- sigma_h * sqrt((t(X[,j,drop=FALSE]) %*% q_sh %*% X[,j,drop=FALSE])^(-1))
+      
       
     }
     
-    ses[j] <- sigma_h * sqrt((t(X[,j,drop=FALSE]) %*% q_sh %*% X[,j,drop=FALSE])^(-1))
-    
+  } else {
+    ses <- sigma_h / sqrt(n)
   }
   
+  # if (correct_bias) b_bar <- (b_bar - bias_correction)
   ts <- b_bar / ses
   ps <- 2 * (1 - pnorm(abs(ts)))
   qs <- p.adjust(ps, method = "BH")

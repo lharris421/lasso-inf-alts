@@ -1,4 +1,4 @@
-posterior <- function(X, y, cv_fit, lambda, sigma2, alpha = 0.05, penalty = "lasso", correction, adjust_ss = TRUE) {
+posterior <- function(X, y, cv_fit, lambda, sigma2, alpha = 0.05, penalty = "lasso", adjust_ss = TRUE, re_est_sigma = FALSE, studentize = FALSE) {
   
   if (!missing(cv_fit) && class(cv_fit) != "cv.ncvreg") {
     stop("cv_fit must be an opbject of class cv.ncvreg.")
@@ -62,46 +62,54 @@ posterior <- function(X, y, cv_fit, lambda, sigma2, alpha = 0.05, penalty = "las
   partial_residuals <- (y - yhat) + (X * matrix(bh_lambda, nrow = n, ncol = p, byrow=TRUE))
   b_bar <- (1/n)*colSums(X * partial_residuals)
   
-  
-  if (sh_lh > 0) {
-    Xs <- X[,s,drop =FALSE]
-    q_sh_default <- diag(n) - Xs %*% solve(t(Xs) %*% Xs, tol = 1e-12) %*% t(Xs)
-  } else {
-    q_sh_default <- diag(n)
-  }
-
-  ns <- numeric(p)
-  for (j in 1:p) {
-
-    if (!s[j]) {
-      s_j <- s
-      sh_j <- sh_lh
-      q_sh <- q_sh_default
+  if (adjust_ss) {
+    if (sh_lh > 0) {
+      Xs <- X[,s,drop =FALSE]
+      q_sh_default <- diag(n) - Xs %*% solve(t(Xs) %*% Xs, tol = 1e-12) %*% t(Xs)
     } else {
-      s_j <- s
-      s_j[j] <- FALSE
-      sh_j <- sum(s_j)
-
-      if (sh_j > 0) {
-        Xsj <- X[,s_j,drop=FALSE]
-        q_sh <- diag(n) - Xsj %*% solve(t(Xsj) %*% Xsj, tol = 1e-12) %*% t(Xsj)
-      } else {
-        q_sh <- diag(n)
-      }
-
+      q_sh_default <- diag(n)
     }
-
-    ns[j] <- t(X[,j,drop=FALSE]) %*% q_sh %*% X[,j,drop=FALSE]
-
+    
+    ns <- numeric(p)
+    for (j in 1:p) {
+      
+      if (!s[j]) {
+        s_j <- s
+        sh_j <- sh_lh
+        q_sh <- q_sh_default
+      } else {
+        s_j <- s
+        s_j[j] <- FALSE
+        sh_j <- sum(s_j)
+        
+        if (sh_j > 0) {
+          Xsj <- X[,s_j,drop=FALSE]
+          q_sh <- diag(n) - Xsj %*% solve(t(Xsj) %*% Xsj, tol = 1e-12) %*% t(Xsj)
+        } else {
+          q_sh <- diag(n)
+        }
+        
+      }
+      
+      ns[j] <- t(X[,j,drop=FALSE]) %*% q_sh %*% X[,j,drop=FALSE]
+      
+    } 
   }
   
   if (missing(sigma2)) {
-    sigma2 <- (n - sh_lh)^(-1) * sum((y - yhat)^2)
+    
+    if (re_est_sigma) {
+      sigma2 <- apply(partial_residuals, 2, est_sigma, n = n, sh = sh_lh)
+    } else {
+      sigma2 <- est_sigma(n = n, sh = sh_lh, resid = y - yhat)
+    }
+    
+    
   }
   
   if (!adjust_ss) ns <- n
-  if (!missing(correction) && correction == "holm") alpha <- alpha / (ncol(X) - order(abs(b_bar), decreasing = TRUE) + 1)
-  ci <- ci_full_cond(b_bar, lambda = lambda, sigma2 = sigma2, n = ns, alpha = alpha, penalty = penalty)
+  ci <- ci_full_cond(b_bar, lambda = lambda, sigma2 = sigma2, n = ns,
+                     alpha = alpha, penalty = penalty, studentize = studentize, df = n - sh_lh)
   
   data.frame(
     variable = colnames(X),
@@ -112,7 +120,7 @@ posterior <- function(X, y, cv_fit, lambda, sigma2, alpha = 0.05, penalty = "las
   )
   
 }
-ci_full_cond <- function(z, lambda, sigma2, n, alpha, penalty = "lasso") {
+ci_full_cond <- function(z, lambda, sigma2, n, alpha, penalty = "lasso", studentize = FALSE, df = NULL) {
   
   ## Tails being transferred on to (log probability in each tail)
   se <- sqrt(sigma2 / n)
@@ -129,20 +137,36 @@ ci_full_cond <- function(z, lambda, sigma2, n, alpha, penalty = "lasso") {
   ps <- alpha / 2
   log_ps <- log(ps) 
   log_one_minus_ps <- log(1 - ps)
-  lowers <- ifelse(
-    frac_lw_log >= log_ps,
-    qnorm(log_ps + obs_lw - frac_lw_log, z + lambda, se, log.p = TRUE),
-    qnorm(log_one_minus_ps + obs_up - frac_up_log, z - lambda, se, lower.tail = FALSE, log.p = TRUE)
-  )
+  if (!studentize) {
+    lowers <- ifelse(
+      frac_lw_log >= log_ps,
+      qnorm(log_ps + obs_lw - frac_lw_log, z + lambda, se, log.p = TRUE),
+      qnorm(log_one_minus_ps + obs_up - frac_up_log, z - lambda, se, lower.tail = FALSE, log.p = TRUE)
+    )    
+  } else {
+    lowers <- ifelse(
+      frac_lw_log >= log_ps,
+      (z + lambda) - se*abs(qt(log_ps + obs_lw - frac_lw_log, df, log.p = TRUE)),
+      (z - lambda) - se*abs(qt(log_one_minus_ps + obs_up - frac_up_log, df, lower.tail = FALSE, log.p = TRUE))
+    )
+  }
   
   ps <- 1 - alpha / 2
   log_ps <- log(ps) 
   log_one_minus_ps <- log(1 - ps)
-  uppers <- ifelse(
-    frac_lw_log >= log_ps,
-    qnorm(log_ps + obs_lw - frac_lw_log, z + lambda, se, log.p = TRUE),
-    qnorm(log_one_minus_ps + obs_up - frac_up_log, z - lambda, se, lower.tail = FALSE, log.p = TRUE)
-  )
+  if (!studentize) {
+    uppers <- ifelse(
+      frac_lw_log >= log_ps,
+      qnorm(log_ps + obs_lw - frac_lw_log, z + lambda, se, log.p = TRUE),
+      qnorm(log_one_minus_ps + obs_up - frac_up_log, z - lambda, se, lower.tail = FALSE, log.p = TRUE)
+    ) 
+  } else {
+    uppers <- ifelse(
+      frac_lw_log >= log_ps,
+      (z + lambda) + se*abs(qt(log_ps + obs_lw - frac_lw_log, df, log.p = TRUE)),
+      (z - lambda) + se*abs(qt(log_one_minus_ps + obs_up - frac_up_log, df, lower.tail = FALSE, log.p = TRUE))
+    )
+  }
   
   if (penalty == "MCP") {
     uppers <- sapply(uppers, firm_threshold_c, lambda, 3)
@@ -180,4 +204,8 @@ firm_threshold_c <- function(z_j, lambda, gamma) {
     return(z_j)
   } 
   
+}
+
+est_sigma <- function(resid, n, sh) {
+  return((n - sh)^(-1) * sum(resid^2))
 }
