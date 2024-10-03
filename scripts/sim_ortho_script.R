@@ -5,9 +5,10 @@ source("./scripts/setup.R")
 
 
 params <- list(seed = 1234, iterations = 1000,
-               simulation_function = "gen_ortho", simulation_arguments = list(
+               simulation_function = "gen_data_snr", simulation_arguments = list(
                  n = 100, p = 100,
-                 beta = c(-2, 2, -1, 1, -0.5, 0.5, -0.5, 0.5, rep(0, 92))
+                 beta = c(-2, 2, -1, 1, -0.5, 0.5, -0.5, 0.5, rep(0, 92)),
+                 family="hetero"
                ), script_name = "sim_ortho_lam")
 
 res <- list()
