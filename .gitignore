@@ -53,5 +53,6 @@ local/
 
 # local rds (now handled by dat)
 *.rds
+rds/*.*
 /rds/.dat/local
 
